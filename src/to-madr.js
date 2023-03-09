@@ -3,7 +3,9 @@ import {group, pipe} from './util'
 const periodical = s => s.endsWith('.') ? s : s + '.'
 const capitalized = s => `${s[0].toUpperCase()}${s.slice(1)}`
 const socialized = s => `${s[0].toLowerCase()}${s.slice(1)}`
+const itemized = s => `* ${s}`
 const formatAsProCon = (type, label) => `* ${type === 'ibis:supports' ? 'Good, because' : 'Bad, because'} ${periodical(socialized(label))}`
+const getLabel = n => n?.data?.label ?? ''
 export const makeMadr = ({nodes, edges}) => {
 	const nodesById = new Map(nodes.map(n => [n.id, n]))
 	const edgesBySource = group(e => e.source)(edges)
@@ -31,10 +33,13 @@ export const makeMadr = ({nodes, edges}) => {
 	const prosAndCons = positions
 		.map(({id, data: {label}}) => [
 			`### ${label}`,
+			...findConnected(id, 'rdfs:comment')
+				.map(([_, n]) => periodical(capitalized(getLabel(n)))),
+			'\n',
 			...findConnected(id, 'ibis:Argument')
 				.map(([type, n]) => formatAsProCon(type, n.data.label))
 		])
-		.filter(xs => xs.length > 1)
+		.filter(xs => xs.length > 2)
 		.map(xs => xs.join('\n'))
 		.join('\n\n')
 
@@ -42,12 +47,12 @@ export const makeMadr = ({nodes, edges}) => {
 
 ## Context and Problem Statement
 ${findConnected(root.id, 'rdfs:comment')
-	.map(([_, n]) => n.data?.label ?? '')
+	.map(([_, n]) => getLabel(n))
 	.map(pipe([capitalized, periodical]))
 	.join('\n\n')}
 
 ## Considered Options
-${positions.map(p => `* ${periodical(capitalized(p.data.label))}`).join('\n')}
+${positions.map(pipe([getLabel, capitalized, periodical, itemized])).join('\n')}
 
 ## Decision Outcome
 <!-- yet to be decided -->
