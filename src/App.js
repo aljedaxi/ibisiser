@@ -20,6 +20,7 @@ import ReactFlow, {
 } from 'reactflow'
 import 'reactflow/dist/style.css'
 import {v1 as uuid} from 'uuid'
+import ReactMarkdown from 'react-markdown'
 
 const ChangeContext = createContext({})
 const {Provider} = ChangeContext
@@ -90,7 +91,11 @@ const IbisClassNode = ({data, id, ...props}) => {
 		<>
 			<Handle type='target' position='left'></Handle>
 			<Handle type='source' position='right'></Handle>
-			<div style={{width: '15ex', minHeight: '1em'}}>{data.label}</div>
+			<div style={{width: '15ex', minHeight: '1em'}}>
+				<ReactMarkdown>
+					{data.label}
+				</ReactMarkdown>
+			</div>
 			<NodeToolbar>
 				<div style={{display: 'grid', gridTemplateColumns: `1fr ${SILVER_RATIO}fr`}}>
 					<label htmlFor={`title-${id}`}>
@@ -201,7 +206,7 @@ const Flow = props => {
     },
     [project]
   );
-	const handleExport = () => {
+	const handleExportJSON = () => {
 		const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify({
 			nodes,
 			edges,
