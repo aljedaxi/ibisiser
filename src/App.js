@@ -26,6 +26,13 @@ const {Provider} = ChangeContext
 
 const foreignObjectWidth = 140
 const foreignObjectHeight = 40
+const IbisSelect = ({children, ...rest}) => (
+	<select {...rest}>
+		{children.map(value => (
+			<option value={value} key={value}>{value.replace('ibis:', '')}</option>
+		))}
+	</select>
+)
 const IbisPropertyEdge = props => {
 	const [edgePath, labelX, labelY] = getBezierPath(props)
 	const {data: {properties} = {}} = useRdfQuery('ibis', '/ibis.ttl')
@@ -51,16 +58,14 @@ const IbisPropertyEdge = props => {
 				requiredExtensions="http://www.w3.org/1999/xhtml"
 			>
 				<div>
-					<select
+					<IbisSelect
 						style={{width: foreignObjectWidth}}
 						aria-label='connection-type' value={data.type} name="class" onChange={e => {
 						const {value} = e.target
 						changeData({type: value})
 					}}>
-						{Object.keys(properties ?? {}).map(value => (
-							<option value={value} key={value}>{value}</option>
-						))}
-					</select>
+						{Object.keys(properties ?? {})}
+					</IbisSelect>
 				</div>
 			</foreignObject>
 		</>
@@ -80,6 +85,7 @@ const IbisClassNode = ({data, id, ...props}) => {
 			}) : n
 		))
 	}
+	const handleDelete = () => setNodes(nodes => nodes.filter(n => n.id !== id))
 	return (
 		<>
 			<Handle type='target' position='left'></Handle>
@@ -97,14 +103,15 @@ const IbisClassNode = ({data, id, ...props}) => {
 					<label htmlFor={`type-${id}`}>
 						Type
 					</label>
-					<select id={`type-${id}`} value={data.type} name="class" onChange={e => {
+					<IbisSelect
+						id={`type-${id}`} value={data.type} name="class" onChange={e => {
 						const {value} = e.target
 						changeData({type: value})
 					}}>
-						{Object.keys(classes ?? {}).map(value => (
-							<option value={value} key={value}>{value}</option>
-						))}
-					</select>
+						{Object.keys(classes ?? {})}
+					</IbisSelect>
+					<div></div>
+					<button style={{color: '#dd0000'}} onClick={handleDelete}>delete</button>
 				</div>
 			</NodeToolbar>
 		</>
