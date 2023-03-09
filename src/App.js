@@ -16,6 +16,7 @@ import ReactFlow, {
 	getBezierPath,
 	useReactFlow,
 	MarkerType,
+	Panel,
 } from 'reactflow'
 import 'reactflow/dist/style.css'
 import {v1 as uuid} from 'uuid'
@@ -27,10 +28,7 @@ const foreignObjectWidth = 140
 const foreignObjectHeight = 40
 const IbisPropertyEdge = props => {
 	const [edgePath, labelX, labelY] = getBezierPath(props)
-	const {data: {properties} = {}} = useRdfQuery(
-		'ibis',
-		'/ibis.ttl'
-	)
+	const {data: {properties} = {}} = useRdfQuery('ibis', '/ibis.ttl')
 	const {source, target, id, data} = props
 	const {setEdges} = useContext(ChangeContext)
 	const changeData = newData => {
@@ -72,10 +70,7 @@ const IbisPropertyEdge = props => {
 const SILVER_RATIO = 2.41421
 
 const IbisClassNode = ({data, id, ...props}) => {
-	const {data: {classes} = {}} = useRdfQuery(
-		'ibis',
-		'/ibis.ttl'
-	)
+	const {data: {classes} = {}} = useRdfQuery('ibis', '/ibis.ttl')
 	const {setNodes} = useContext(ChangeContext)
 	const changeData = newData => {
 		setNodes(nodes => nodes.map(
@@ -89,7 +84,7 @@ const IbisClassNode = ({data, id, ...props}) => {
 		<>
 			<Handle type='target' position='left'></Handle>
 			<Handle type='source' position='right'></Handle>
-			<div style={{width: '15ex'}}>{data.label}</div>
+			<div style={{width: '15ex', minHeight: '1em'}}>{data.label}</div>
 			<NodeToolbar>
 				<div style={{display: 'grid', gridTemplateColumns: `1fr ${SILVER_RATIO}fr`}}>
 					<label htmlFor={`title-${id}`}>
@@ -133,7 +128,7 @@ const atStart = {
 }
 //TODO this isn't working for some reason
 const defaultsBySource = ({data = {}} = {}) => ({
-	'ibis:Issue': {direction: atStart, edge: 'ibis:suggests', node: 'ibis:Position'},
+	'ibis:Issue': {direction: atStart, edge: 'ibis:responds-to', node: 'ibis:Position'},
 	'ibis:Position': {direction: atStart, edge: 'ibis:supports', node: 'ibis:Argument'},
 }[data.type] ?? {edge: 'ibis:suggests', node: 'ibis:Argument', direction: {}})
 const Flow = props => {
@@ -199,6 +194,29 @@ const Flow = props => {
     },
     [project]
   );
+	const handleExport = () => {
+		const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify({
+			nodes,
+			edges,
+		}, null, 2))
+		const dlAnchorElement = document.createElement('a')
+		dlAnchorElement.setAttribute('href', dataStr)
+		dlAnchorElement.setAttribute('download', 'swag.json')
+		document.body.appendChild(dlAnchorElement)
+		dlAnchorElement.click()
+		dlAnchorElement.remove()
+	}
+	const handleImportJSON = e => {
+		Promise.all([...e.target.files].map(f => f.text()))
+			.then(([s, ...rest]) => {
+				if (rest.length) {
+					console.error('ignoring:', rest)
+				}
+				const {edges, nodes} = JSON.parse(s)
+				setEdges(edges)
+				setNodes(nodes)
+			})
+	}
 	return (
 		<Provider value={{setEdges, setNodes}}>
 			<div style={{height: '100%', width: '100%'}} ref={reactFlowWrapper}>
@@ -213,6 +231,10 @@ const Flow = props => {
 					onConnectStart,
 					onConnectEnd,
 				}}>
+					<Panel position='top-center'>
+						<button onClick={handleExport}>export</button>
+						<input onChange={handleImportJSON} type="file"/>
+					</Panel>
 					<Background variant='lines'></Background>
 					<Controls></Controls>
 				</ReactFlow>
@@ -224,10 +246,7 @@ const Flow = props => {
 const queryClient = new QueryClient()
 
 const Turtler = () => {
-	const {data = {}} = useRdfQuery(
-		'ibis',
-		'/ibis.ttl'
-	)
+	const {data = {}} = useRdfQuery('ibis', '/ibis.ttl')
 	const {classes, properties, ontologies} = data
 	return (
 		<Flow {...{classes, properties, ontologies}}>
