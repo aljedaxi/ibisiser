@@ -1,6 +1,4 @@
 import {useCallback, createContext, useContext, useState, useRef} from 'react'
-import logo from './logo.svg';
-import './App.css';
 import { QueryClient, QueryClientProvider, useQuery } from 'react-query'
 import {useRdfQuery} from './rdf'
 import ReactFlow, {
@@ -101,9 +99,7 @@ function App() {
   return (
     <ReactFlowProvider>
     	<QueryClientProvider client={queryClient}>
-    		<div className="App">
-					<Turtler></Turtler>
-    		</div>
+				<Turtler></Turtler>
     	</QueryClientProvider>
     </ReactFlowProvider>
   );
