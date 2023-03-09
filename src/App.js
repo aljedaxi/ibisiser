@@ -21,8 +21,9 @@ import {v1 as uuid} from 'uuid'
 import ReactMarkdown from 'react-markdown'
 import {makeMadr} from './to-madr'
 import {ibisClassType, ibisPropertyType, FlowChartLol} from './flow'
+import {parseString} from './from-madr'
 
-const getId = () => uuid()
+export const getId = () => uuid()
 const download = (dataStr, fileName) => {
 	const dlAnchorElement = document.createElement('a')
 	dlAnchorElement.setAttribute('href', dataStr)
@@ -73,15 +74,22 @@ const Flow = props => {
 			`${defaultFileName}.md`
 		)
 	}
-	const handleImportJSON = e => {
-		Promise.all([...e.target.files].map(f => f.text()))
-			.then(([s, ...rest]) => {
+	const handleImport = e => {
+		Promise.all([...e.target.files].map(async f => ({text: await f.text(), name: f.name})))
+			.then(([{text: s, name}, ...rest]) => {
 				if (rest.length) {
 					console.error('ignoring:', rest)
 				}
-				const {edges, nodes} = JSON.parse(s)
-				setEdges(edges)
-				setNodes(nodes)
+				if (name.endsWith('json')) {
+					const {edges, nodes} = JSON.parse(s)
+					setEdges(edges)
+					setNodes(nodes)
+				}
+				if (name.endsWith('.md')) {
+					const {edges, nodes} = parseString(s)
+					setEdges(edges)
+					setNodes(nodes)
+				}
 			})
 	}
 	return (
@@ -96,7 +104,7 @@ const Flow = props => {
 			<Panel position='top-center'>
 				<button onClick={handleExportJSON}>export JSON</button>
 				<button onClick={handleExportMADR}>export MADR</button>
-				<input onChange={handleImportJSON} type="file"/>
+				<input onChange={handleImport} type="file"/>
 			</Panel>
 		</FlowChartLol>
 	)

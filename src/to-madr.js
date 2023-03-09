@@ -39,7 +39,7 @@ export const makeMadr = ({nodes, edges}) => {
 			const description = findConnected(id, 'rdfs:comment').map(([_, n]) => periodical(capitalized(getLabel(n))))
 			const args = findConnected(id, 'ibis:Argument').map(([type, n]) => formatAsProCon(type, n.data.label))
 			return [
-				`### ${label}`,
+				`### ${capitalized(label)}`,
 				...description,
 				...(description.length > 0 && args.length > 0) ? [''] : [],
 				...args,
