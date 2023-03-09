@@ -1,7 +1,9 @@
-import {group} from './util'
+import {group, pipe} from './util'
 
-const formatAsProCon = (type, label) => `* ${type === 'ibis:supports' ? 'Good, because' : 'Bad, because'} ${label}`
-const trace = s => (console.log(s), s)
+const periodical = s => s.endsWith('.') ? s : s + '.'
+const capitalized = s => `${s[0].toUpperCase()}${s.slice(1)}`
+const socialized = s => `${s[0].toLowerCase()}${s.slice(1)}`
+const formatAsProCon = (type, label) => `* ${type === 'ibis:supports' ? 'Good, because' : 'Bad, because'} ${periodical(socialized(label))}`
 export const makeMadr = ({nodes, edges}) => {
 	const nodesById = new Map(nodes.map(n => [n.id, n]))
 	const edgesBySource = group(e => e.source)(edges)
@@ -13,7 +15,7 @@ export const makeMadr = ({nodes, edges}) => {
 				return [e.data.type, nodesById.get(target)]
 			})
 		return property
-			? edges.filter(([eType, n]) => trace(eType) === property || n?.data?.type === property)
+			? edges.filter(([eType, n]) => eType === property || n?.data?.type === property)
 			: edges
 	}
 	const {
@@ -26,7 +28,6 @@ export const makeMadr = ({nodes, edges}) => {
 	const root = issues[0]
 	const title = root.data.label
 	//TODO decision driver
-	//TODO context and problem statement
 	const prosAndCons = positions
 		.map(({id, data: {label}}) => [
 			`### ${label}`,
@@ -40,10 +41,13 @@ export const makeMadr = ({nodes, edges}) => {
 	return `# ${title}
 
 ## Context and Problem Statement
-${findConnected(root.id, 'rdfs:comment').map(([_, n]) => n.data?.label ?? '').join('\n\n')}
+${findConnected(root.id, 'rdfs:comment')
+	.map(([_, n]) => n.data?.label ?? '')
+	.map(pipe([capitalized, periodical]))
+	.join('\n\n')}
 
 ## Considered Options
-${positions.map(p => `* ${p.data.label}`).join('\n')}
+${positions.map(p => `* ${periodical(capitalized(p.data.label))}`).join('\n')}
 
 ## Decision Outcome
 <!-- yet to be decided -->

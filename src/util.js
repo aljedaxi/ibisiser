@@ -6,3 +6,5 @@ export const group = f => xs => xs.reduce(
 	},
 	{}
 )
+
+export const pipe = fs => x => fs.reduce((x, f) => f(x), x)
