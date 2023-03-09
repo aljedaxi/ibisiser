@@ -22,6 +22,7 @@ import ReactMarkdown from 'react-markdown'
 import {makeMadr} from './to-madr'
 import {ibisClassType, ibisPropertyType, FlowChartLol} from './flow'
 import {parseString} from './from-madr'
+import dagre from 'dagre'
 
 export const getId = () => uuid()
 const download = (dataStr, fileName) => {
@@ -87,8 +88,29 @@ const Flow = props => {
 				}
 				if (name.endsWith('.md')) {
 					const {edges, nodes} = parseString(s)
+					const dagreGraph = new dagre.graphlib.Graph()
+					dagreGraph.setDefaultEdgeLabel(() => ({}))
+					const nodeWidth = 172
+					const nodeHeight = 172
+					const width = nodeWidth
+					const height = nodeHeight
+
+					dagreGraph.setGraph({rankdir: 'LR'})
+					nodes.forEach(n => dagreGraph.setNode(n.id, {width, height}))
+					edges.forEach(e => dagreGraph.setEdge(e.source, e.target))
+					dagre.layout(dagreGraph)
+
+					setNodes(nodes.map(n => {
+						const dNode = dagreGraph.node(n.id)
+						return {
+							...n,
+							position: {
+								x: dNode.x - nodeWidth / 2,
+								y: dNode.y - nodeHeight / 2,
+							}
+						}
+					}))
 					setEdges(edges)
-					setNodes(nodes)
 				}
 			})
 	}
