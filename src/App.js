@@ -21,6 +21,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css'
 import {v1 as uuid} from 'uuid'
 import ReactMarkdown from 'react-markdown'
+import {makeMadr} from './to-madr'
 
 const ChangeContext = createContext({})
 const {Provider} = ChangeContext
@@ -143,6 +144,14 @@ const defaultsBySource = ({data = {}} = {}) => ({
 	'ibis:Issue': {direction: atStart, edge: 'ibis:responds-to', node: 'ibis:Position'},
 	'ibis:Position': {direction: atStart, edge: 'ibis:supports', node: 'ibis:Argument'},
 }[data.type] ?? {edge: 'ibis:suggests', node: 'ibis:Argument', direction: {}})
+const download = (dataStr, fileName) => {
+	const dlAnchorElement = document.createElement('a')
+	dlAnchorElement.setAttribute('href', dataStr)
+	dlAnchorElement.setAttribute('download', fileName)
+	document.body.appendChild(dlAnchorElement)
+	dlAnchorElement.click()
+	dlAnchorElement.remove()
+}
 const Flow = props => {
 	const {classes, properties, ontologies} = props
 	const reactFlowWrapper = useRef(null)
@@ -211,12 +220,11 @@ const Flow = props => {
 			nodes,
 			edges,
 		}, null, 2))
-		const dlAnchorElement = document.createElement('a')
-		dlAnchorElement.setAttribute('href', dataStr)
-		dlAnchorElement.setAttribute('download', 'swag.json')
-		document.body.appendChild(dlAnchorElement)
-		dlAnchorElement.click()
-		dlAnchorElement.remove()
+		download(dataStr, 'swag.json')
+	}
+	const trace = s => (console.log(s), s)
+	const handleExportMADR = () => {
+		download('data:text/markdown;charset=utf-8,' + encodeURIComponent(makeMadr({nodes, edges})), 'swag.md')
 	}
 	const handleImportJSON = e => {
 		Promise.all([...e.target.files].map(f => f.text()))
@@ -244,7 +252,8 @@ const Flow = props => {
 					onConnectEnd,
 				}}>
 					<Panel position='top-center'>
-						<button onClick={handleExport}>export</button>
+						<button onClick={handleExportJSON}>export JSON</button>
+						<button onClick={handleExportMADR}>export MADR</button>
 						<input onChange={handleImportJSON} type="file"/>
 					</Panel>
 					<Background variant='lines'></Background>

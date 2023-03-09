@@ -1,5 +1,6 @@
 import N3 from 'n3'
 import { QueryClient, QueryClientProvider, useQuery } from 'react-query'
+import {group} from './util'
 const prefixes = {
 	'http://purl.org/ontology/bibo/'             : 'bibo',
 	'http://purl.org/dc/terms/'                  : 'dct' ,
@@ -43,15 +44,6 @@ const parseAsync = s => {
 		ontologies: Object.fromEntries(ontologies),
 	}
 }
-
-const group = f => xs => xs.reduce(
-	(acc, val) => {
-		const key = f(val)
-		acc[key] = [...(acc[key] ?? []), val]
-		return acc
-	},
-	{}
-)
 
 export const useRdfQuery = (stuff, url, ...otherStuff) => useQuery(
 	stuff,
