@@ -33,6 +33,7 @@ const download = (dataStr, fileName) => {
 	dlAnchorElement.click()
 	dlAnchorElement.remove()
 }
+const makeFileURIComponent = mimeType => string => `data:${mimeType};charset=utf-8,${encodeURIComponent(string)}`
 const Flow = props => {
 	const {classes, properties, ontologies} = props
 	const [nodes, setNodes, onNodesChange] = useNodesState([{
@@ -43,15 +44,18 @@ const Flow = props => {
 		type: ibisClassType,
 	}])
 	const [edges, setEdges, onEdgesChange] = useEdgesState([])
+	const defaultFileName = nodes.find(n => n.data.type === 'ibis:Issue')?.data?.label?.replace(/\s/g, '-').toLowerCase()
 	const handleExportJSON = () => {
-		const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify({
-			nodes,
-			edges,
-		}, null, 2))
-		download(dataStr, 'swag.json')
+		download(
+			makeFileURIComponent('text/json')(JSON.stringify({nodes, edges,}, null, 2)),
+			`${defaultFileName}.json`
+		)
 	}
 	const handleExportMADR = () => {
-		download('data:text/markdown;charset=utf-8,' + encodeURIComponent(makeMadr({nodes, edges})), 'swag.md')
+		download(
+			makeFileURIComponent('text/markdown')(makeMadr({nodes, edges})),
+			`${defaultFileName}.md`
+		)
 	}
 	const handleImportJSON = e => {
 		Promise.all([...e.target.files].map(f => f.text()))
