@@ -22,7 +22,7 @@ const parser = new N3.Parser()
 
 const extras = {
 	properties: ['rdfs:comment'],
-	classes: ['rdfs:Literal'],
+	classes: ['rdfs:Literal', 'owl:Thing'],
 }
 
 const parseAsync = s => {
