@@ -14,24 +14,25 @@ import ReactFlow, {
 	MarkerType,
 	Panel,
 } from 'reactflow'
-import {useRdfQuery} from './rdf'
+import {useRdfTypes} from './rdf'
 import ReactMarkdown from 'react-markdown'
 import {v1 as uuid} from 'uuid'
 
 const ChangeContext = createContext({})
+const defix = s => s.replace(/^\w+:/, '')
 
 const foreignObjectWidth = 140
 const foreignObjectHeight = 40
 const IbisSelect = ({children, ...rest}) => (
 	<select {...rest}>
 		{children.map(value => (
-			<option value={value} key={value}>{value.replace('ibis:', '')}</option>
+			<option value={value} key={value}>{defix(value)}</option>
 		))}
 	</select>
 )
 const IbisPropertyEdge = props => {
 	const [edgePath, labelX, labelY] = getBezierPath(props)
-	const {data: {properties} = {}} = useRdfQuery('ibis', '/ibis.ttl')
+	const {data: {properties} = {}} = useRdfTypes('ibis', '/ibis.ttl')
 	const {source, target, id, data} = props
 	const {setEdges} = useContext(ChangeContext)
 	const changeData = newData => {
@@ -60,7 +61,7 @@ const IbisPropertyEdge = props => {
 						const {value} = e.target
 						changeData({type: value})
 					}}>
-						{Object.keys(properties ?? {})}
+						{properties ?? []}
 					</IbisSelect>
 				</div>
 			</foreignObject>
@@ -71,8 +72,8 @@ const IbisPropertyEdge = props => {
 const SILVER_RATIO = 2.41421
 
 const IbisClassNode = ({data, id, ...props}) => {
-	const {data: {classes} = {}} = useRdfQuery('ibis', '/ibis.ttl')
-	const {setNodes} = useContext(ChangeContext)
+	const {data: {classes} = {}} = useRdfTypes('ibis', '/ibis.ttl')
+	const {setNodes, nodes} = useContext(ChangeContext)
 	const changeData = newData => {
 		setNodes(nodes => nodes.map(
 			n => n.id === id ? ({
@@ -108,10 +109,16 @@ const IbisClassNode = ({data, id, ...props}) => {
 						const {value} = e.target
 						changeData({type: value})
 					}}>
-						{Object.keys(classes ?? {})}
+						{classes ?? []}
 					</IbisSelect>
 					<div></div>
-					<button style={{color: '#dd0000'}} onClick={handleDelete}>delete</button>
+					<button
+						disabled={data.type === 'ibis:Issue' && nodes.filter(n => n.data.type === 'ibis:Issue').length < 2}
+						style={{color: '#dd0000'}}
+						onClick={handleDelete}
+					>
+						delete
+					</button>
 				</div>
 			</NodeToolbar>
 		</>
@@ -122,7 +129,6 @@ export const ibisClassType = 'ibisClass'
 const nodeTypes = {[ibisClassType]: IbisClassNode}
 export const ibisPropertyType = 'ibisProperty'
 const edgeTypes = {[ibisPropertyType]: IbisPropertyEdge}
-
 
 const atStart = {
 	markerStart: {
@@ -141,7 +147,7 @@ const defaultsBySource = ({data = {}} = {}) => ({
 const getId = () => uuid()
 const {Provider} = ChangeContext
 export const FlowChartLol = props => {
-	const {setEdges, setNodes, children, nodes, ...rest} = props
+	const {setEdges, setNodes, children, edges, nodes, ...rest} = props
 	const reactFlowWrapper = useRef(null)
 	const connectingNodeId = useRef(null)
 	const { project } = useReactFlow()
@@ -192,10 +198,11 @@ export const FlowChartLol = props => {
 		[setEdges]
 	)
 	return (
-		<Provider value={{setEdges, setNodes}}>
+		<Provider value={{edges, nodes, setEdges, setNodes}}>
 			<div style={{height: '100%', width: '100%'}} ref={reactFlowWrapper}>
 				<ReactFlow {...{
 					...rest,
+					edges,
 					nodes,
 					onConnectStart,
 					onConnectEnd,

@@ -20,7 +20,7 @@ import 'reactflow/dist/style.css'
 import {v1 as uuid} from 'uuid'
 import ReactMarkdown from 'react-markdown'
 import {makeMadr} from './to-madr'
-import {ibisClassType, FlowChartLol} from './flow'
+import {ibisClassType, ibisPropertyType, FlowChartLol} from './flow'
 
 const getId = () => uuid()
 const download = (dataStr, fileName) => {
@@ -32,17 +32,35 @@ const download = (dataStr, fileName) => {
 	dlAnchorElement.remove()
 }
 const makeFileURIComponent = mimeType => string => `data:${mimeType};charset=utf-8,${encodeURIComponent(string)}`
-const Flow = props => {
-	const {classes, properties, ontologies} = props
-	const [nodes, setNodes, onNodesChange] = useNodesState([{
+const startingNodes = [
+	{
 		id: getId(),
 		data: {label: 'Your issue', type: 'ibis:Issue'},
 		position: {x: 100, y: 100},
-		hidden: false,
 		type: ibisClassType,
-	}])
-	const [edges, setEdges, onEdgesChange] = useEdgesState([])
-	const defaultFileName = nodes.find(n => n.data.type === 'ibis:Issue')?.data?.label?.replace(/\s/g, '-').toLowerCase()
+	},
+	{
+		id: getId(),
+		data: {label: 'A description of your issue', type: 'rdfs:Literal'},
+		position: {x: 400, y: 150},
+		type: ibisClassType,
+	}
+]
+const startingEdges = [
+	{
+		id: getId(),
+		data: {type: 'rdfs:comment'},
+		source: startingNodes.find(n => n.data.type === 'ibis:Issue').id,
+		target: startingNodes.find(n => n.data.type === 'rdfs:Literal').id,
+		type: ibisPropertyType,
+	}
+]
+const Flow = props => {
+	const {classes, properties, ontologies} = props
+	const [nodes, setNodes, onNodesChange] = useNodesState(startingNodes)
+	const [edges, setEdges, onEdgesChange] = useEdgesState(startingEdges)
+	const root = nodes.find(n => n.data.type === 'ibis:Issue')
+	const defaultFileName = root?.data?.label?.replace(/\s/g, '-').toLowerCase()
 	const handleExportJSON = () => {
 		download(
 			makeFileURIComponent('text/json')(JSON.stringify({nodes, edges,}, null, 2)),

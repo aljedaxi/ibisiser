@@ -20,6 +20,11 @@ const prefix = s => Object.entries(prefixes).reduce((s, [k, v]) => s.replace(k, 
 
 const parser = new N3.Parser()
 
+const extras = {
+	properties: ['rdfs:comment'],
+	classes: ['rdfs:Literal'],
+}
+
 const parseAsync = s => {
 	const data = parser.parse(s)
 	const ibisTerms = data.reduce(
@@ -50,3 +55,17 @@ export const useRdfQuery = (stuff, url, ...otherStuff) => useQuery(
 	() => fetch(url).then(r => r.text()).then(parseAsync),
 	...otherStuff
 )
+
+export const useRdfTypes = (stuff, url, ...otherStuff) => {
+	const {data = {}, ...rest} = useQuery(
+		stuff,
+		() => fetch(url).then(r => r.text()).then(parseAsync),
+		...otherStuff
+	)
+	return {...rest, data: Object.fromEntries(
+		Object.entries(data).map(([k, v]) => [
+			k,
+			[...Object.keys(v), ...extras[k] ?? []],
+		])
+	)}
+}
