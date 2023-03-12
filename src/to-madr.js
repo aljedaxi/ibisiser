@@ -24,9 +24,6 @@ export const makeMadr = ({nodes, edges}) => {
 	const {
 		'ibis:Issue': issues = [],
 		'ibis:Position': positions = [],
-		'ibis:Argument': args = [],
-		'rdfs:Literal': literals = [],
-		'owl:Thing': things = [],
 	} = group(n => n.data.type)(nodes)
 	if (issues.length !== 1) throw new Error('too-many-issues')
 	const root = issues[0]

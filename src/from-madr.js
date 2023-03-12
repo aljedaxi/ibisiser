@@ -5,7 +5,6 @@ const deItemize = s => s.replace(/^\* /, '')
 const deval = s => deItemize(s).replace(/^\w+, because /, '')
 const dePeriodicize = s => s.replace(/\.$/, '')
 const parser = iterableByLines => {
-	let issueName;
 	let section;
 	let subsection;
 	const root = {
@@ -16,7 +15,7 @@ const parser = iterableByLines => {
 	for (const l of iterableByLines) {
 		if (l === '') continue
 		if (l.startsWith('#')) {
-			const name = l.replace(/\#+\s*/, '').toLowerCase()
+			const name = l.replace(/#+\s*/, '').toLowerCase()
 			if (l.startsWith('###')) {
 				subsection = name
 				continue

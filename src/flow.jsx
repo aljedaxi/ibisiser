@@ -1,18 +1,12 @@
-import {useCallback, createContext, useContext, useState, useRef} from 'react'
+import {useCallback, createContext, useContext, useRef} from 'react'
 import ReactFlow, {
-	ReactFlowProvider,
 	Controls,
-	useNodesState,
-	useEdgesState,
 	Background,
-	addEdge,
 	Handle,
-	Position,
 	NodeToolbar,
 	getBezierPath,
 	useReactFlow,
 	MarkerType,
-	Panel,
 } from 'reactflow'
 import {useRdfTypes} from './rdf'
 import ReactMarkdown from 'react-markdown'
@@ -33,7 +27,7 @@ const IbisSelect = ({children, ...rest}) => (
 const IbisPropertyEdge = props => {
 	const [edgePath, labelX, labelY] = getBezierPath(props)
 	const {data: {properties} = {}} = useRdfTypes('ibis', '/ibis.ttl')
-	const {source, target, id, data} = props
+	const {id, data} = props
 	const {setEdges} = useContext(ChangeContext)
 	const changeData = newData => {
 		setEdges(edges => edges.map(
@@ -181,7 +175,7 @@ export const FlowChartLol = props => {
 				}));
       }
     },
-    [project]
+    [project, nodes, setEdges, setNodes]
   );
 	const onConnect = useCallback(
 		({source, target}) => {
@@ -195,7 +189,7 @@ export const FlowChartLol = props => {
 				},
 			])
 		},
-		[setEdges]
+		[setEdges, nodes]
 	)
 	return (
 		<Provider value={{edges, nodes, setEdges, setNodes}}>

@@ -1,5 +1,5 @@
 import N3 from 'n3'
-import { QueryClient, QueryClientProvider, useQuery } from 'react-query'
+import {useQuery} from 'react-query'
 import {group} from './util'
 const prefixes = {
 	'http://purl.org/ontology/bibo/'             : 'bibo',

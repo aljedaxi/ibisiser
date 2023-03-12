@@ -1,24 +1,13 @@
-import {useCallback, createContext, useContext, useState, useRef} from 'react'
-import { QueryClient, QueryClientProvider, useQuery } from 'react-query'
+import {QueryClient, QueryClientProvider} from 'react-query'
 import {useRdfQuery} from './rdf'
-import ReactFlow, {
+import {
 	ReactFlowProvider,
-	Controls,
 	useNodesState,
 	useEdgesState,
-	Background,
-	addEdge,
-	Handle,
-	Position,
-	NodeToolbar,
-	getBezierPath,
-	useReactFlow,
-	MarkerType,
 	Panel,
 } from 'reactflow'
 import 'reactflow/dist/style.css'
 import {v1 as uuid} from 'uuid'
-import ReactMarkdown from 'react-markdown'
 import {makeMadr} from './to-madr'
 import {ibisClassType, ibisPropertyType, FlowChartLol} from './flow'
 import {parseString} from './from-madr'
@@ -58,7 +47,6 @@ const startingEdges = [
 	}
 ]
 const Flow = props => {
-	const {classes, properties, ontologies} = props
 	const [nodes, setNodes, onNodesChange] = useNodesState(startingNodes)
 	const [edges, setEdges, onEdgesChange] = useEdgesState(startingEdges)
 	const root = nodes.find(n => n.data.type === 'ibis:Issue')
