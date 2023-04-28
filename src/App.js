@@ -9,7 +9,7 @@ import {
 import 'reactflow/dist/style.css'
 import {v1 as uuid} from 'uuid'
 import {makeMadr} from './to-madr'
-import {ibisClassType, ibisPropertyType, FlowChartLol} from './flow'
+import {Node, Edge, FlowChartLol} from './flow'
 import {parseString} from './from-madr'
 import dagre from 'dagre'
 
@@ -23,29 +23,16 @@ const download = (dataStr, fileName) => {
 	dlAnchorElement.remove()
 }
 const makeFileURIComponent = mimeType => string => `data:${mimeType};charset=utf-8,${encodeURIComponent(string)}`
-const startingNodes = [
-	{
-		id: getId(),
-		data: {label: 'Your issue', type: 'ibis:Issue'},
-		position: {x: 100, y: 100},
-		type: ibisClassType,
-	},
-	{
-		id: getId(),
-		data: {label: 'A description of your issue', type: 'rdfs:Literal'},
-		position: {x: 400, y: 150},
-		type: ibisClassType,
-	}
-]
-const startingEdges = [
-	{
-		id: getId(),
-		data: {type: 'rdfs:comment'},
-		source: startingNodes.find(n => n.data.type === 'ibis:Issue').id,
-		target: startingNodes.find(n => n.data.type === 'rdfs:Literal').id,
-		type: ibisPropertyType,
-	}
-]
+const issue = {
+	...(new Node(undefined, {position: {x: 100, y: 100}}).node),
+	data: {label: 'Your issue', type: 'ibis:Issue'},
+}
+const description = {
+	...(new Node(undefined, {position: {x: 400, y: 150}}).node),
+	data: {label: 'A description of your issue', type: 'rdfs:Literal'},
+}
+const startingNodes = [issue, description]
+const startingEdges = [{...new Edge(issue, description), data: {type: 'rdfs:comment'}}]
 const Flow = props => {
 	const [nodes, setNodes, onNodesChange] = useNodesState(startingNodes)
 	const [edges, setEdges, onEdgesChange] = useEdgesState(startingEdges)

@@ -12,6 +12,17 @@ import {useRdfTypes} from './rdf'
 import ReactMarkdown from 'react-markdown'
 import {v1 as uuid} from 'uuid'
 
+const optionsByClass = 
+	[...document.querySelectorAll('datalist')].reduce((acc, e) => {
+		const xs = e.id.replace(/-options$/, '').split('-')
+		const classFrom = xs.slice(0, 2).join(':')
+		const classTo = xs.slice(2).join(':')
+		acc[classFrom] ??= {}
+		acc[classFrom][classTo] ??= []
+		acc[classFrom][classTo].push(...[...e.options].map(e => e.value))
+		return acc
+	}, {})
+
 const ChangeContext = createContext({})
 const defix = s => s.replace(/^\w+:/, '')
 
@@ -28,6 +39,9 @@ const IbisPropertyEdge = props => {
 	const [edgePath, labelX, labelY] = getBezierPath(props)
 	const {data: {properties} = {}} = useRdfTypes('ibis', '/ibis.ttl')
 	const {id, data} = props
+	console.log(data.fromType)
+	console.log(optionsByClass)
+	const options = optionsByClass[data.fromType]?.[data.toType] ?? properties
 	const {setEdges} = useContext(ChangeContext)
 	const changeData = newData => {
 		setEdges(edges => edges.map(
@@ -51,11 +65,15 @@ const IbisPropertyEdge = props => {
 				<div>
 					<IbisSelect
 						style={{width: foreignObjectWidth}}
-						aria-label='connection-type' value={data.type} name="class" onChange={e => {
-						const {value} = e.target
-						changeData({type: value})
-					}}>
-						{properties ?? []}
+						aria-label='connection-type'
+						value={data.type}
+						name="class"
+						onChange={e => {
+							const {value} = e.target
+							changeData({type: value})
+						}}
+					>
+						{options ?? []}
 					</IbisSelect>
 				</div>
 			</foreignObject>
@@ -140,6 +158,33 @@ const defaultsBySource = ({data = {}} = {}) => ({
 
 const getId = () => uuid()
 const {Provider} = ChangeContext
+export function Edge(fromNode, toNode) {
+	const {edge, direction} = defaultsBySource(fromNode)
+	Object.assign(this, {
+		id: toNode.id,
+		source: fromNode.id,
+		target: toNode.id,
+		data: {
+			type: edge,
+			fromType: fromNode.data.type,
+			toType: toNode.data.type,
+		},
+		type: ibisPropertyType,
+		...direction,
+	})
+}
+export function Node(fromNode, {position}) {
+	const {node} = defaultsBySource(fromNode)
+	const id = getId();
+	this.node = {
+		id,
+		type: ibisClassType,
+		position: position,
+		data: { label: `Node ${id}`, type: node },
+	};
+	if (!fromNode) return this
+	this.edge = new Edge(fromNode, this.node);
+}
 export const FlowChartLol = props => {
 	const {setEdges, setNodes, children, edges, nodes, ...rest} = props
 	const reactFlowWrapper = useRef(null)
@@ -155,24 +200,14 @@ export const FlowChartLol = props => {
       if (targetIsPane) {
         // we need to remove the wrapper bounds, in order to get the correct position
         const { top, left } = reactFlowWrapper.current.getBoundingClientRect();
-        const id = getId();
-				const {node, edge, direction} = defaultsBySource(nodes.find(({id}) => id === connectingNodeId.current))
-        const newNode = {
-          id,
-					type: ibisClassType,
-          position: project({ x: event.clientX - left - 75, y: event.clientY - top }),
-          data: { label: `Node ${id}`, type: node },
-        };
+				const fromNode = nodes.find(({id}) => id === connectingNodeId.current)
+				const {node: newNode, edge: newEdge} = new Node(
+					fromNode,
+					{position: project({x: event.clientX - left - 75, y: event.clientY - top })}
+				)
 
         setNodes((nds) => nds.concat(newNode));
-        setEdges((eds) => eds.concat({
-					id,
-					source: connectingNodeId.current,
-					target: id,
-					data: {type: edge},
-					type: ibisPropertyType,
-					...direction,
-				}));
+        setEdges((eds) => eds.concat(newEdge));
       }
     },
     [project, nodes, setEdges, setNodes]
