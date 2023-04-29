@@ -39,8 +39,6 @@ const IbisPropertyEdge = props => {
 	const [edgePath, labelX, labelY] = getBezierPath(props)
 	const {data: {properties} = {}} = useRdfTypes('ibis', '/ibis.ttl')
 	const {id, data} = props
-	console.log(data.fromType)
-	console.log(optionsByClass)
 	const options = optionsByClass[data.fromType]?.[data.toType] ?? properties
 	const {setEdges} = useContext(ChangeContext)
 	const changeData = newData => {
@@ -85,7 +83,7 @@ const SILVER_RATIO = 2.41421
 
 const IbisClassNode = ({data, id, ...props}) => {
 	const {data: {classes} = {}} = useRdfTypes('ibis', '/ibis.ttl')
-	const {setNodes, nodes} = useContext(ChangeContext)
+	const {setNodes, nodes, setEdges} = useContext(ChangeContext)
 	const changeData = newData => {
 		setNodes(nodes => nodes.map(
 			n => n.id === id ? ({
@@ -93,6 +91,13 @@ const IbisClassNode = ({data, id, ...props}) => {
 				data: {...n.data, ...newData},
 			}) : n
 		))
+		if (newData.type) {
+			setEdges(edges => edges.map(
+				e => e.source === id ? {...e, data: {...e.data, fromType: newData.type}}
+				:    e.target === id ? {...e, data: {...e.data, toType: newData.type}}
+				:                    e
+			))
+		}
 	}
 	const handleDelete = () => setNodes(nodes => nodes.filter(n => n.id !== id))
 	return (
