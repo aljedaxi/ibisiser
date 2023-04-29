@@ -30,7 +30,7 @@ const description = {
 	data: {label: 'A description of your issue', type: 'rdfs:Literal'},
 }
 const startingNodes = [issue, description]
-const startingEdges = [{...new Edge(issue, description), data: {type: 'rdfs:comment'}}]
+const startingEdges = [{...new Edge(issue, description, {type: 'rdfs:comment'})}]
 const Flow = props => {
 	const [nodes, setNodes, onNodesChange] = useNodesState(startingNodes)
 	const [edges, setEdges, onEdgesChange] = useEdgesState(startingEdges)

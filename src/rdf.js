@@ -19,5 +19,7 @@ export const optionsByClass =
 		return acc
 	}, {})
 
+optionsByClass['ibis:Issue']['rdfs:Literal'] ??= []
+optionsByClass['ibis:Issue']['rdfs:Literal'].push('rdfs:comment')
 export const predicates = [...predicatesSet].sort()
 export const classes = [...classesSet].sort()

@@ -70,7 +70,7 @@ const IbisPropertyEdge = props => {
 const SILVER_RATIO = 2.41421
 
 const IbisClassNode = ({data, id, ...props}) => {
-	const {setNodes, nodes, setEdges} = useContext(ChangeContext)
+	const {setNodes, nodes, setEdges, edges} = useContext(ChangeContext)
 	const changeData = newData => {
 		setNodes(nodes => nodes.map(
 			n => n.id === id ? ({
@@ -86,6 +86,9 @@ const IbisClassNode = ({data, id, ...props}) => {
 			))
 		}
 	}
+	const myEdge = edges.find(e => e.target === id)
+	const mySource = nodes.find(n => n.id === myEdge?.source)
+	const permissableClasses = Object.keys(optionsByClass[mySource?.data.type] ?? {})
 	const handleDelete = () => setNodes(nodes => nodes.filter(n => n.id !== id))
 	return (
 		<>
@@ -113,7 +116,7 @@ const IbisClassNode = ({data, id, ...props}) => {
 						const {value} = e.target
 						changeData({type: value})
 					}}>
-						{classes ?? []}
+						{permissableClasses.length ? permissableClasses : classes}
 					</IbisSelect>
 					<div></div>
 					<button
@@ -150,14 +153,14 @@ const defaultsBySource = ({data = {}} = {}) => ({
 
 const getId = () => uuid()
 const {Provider} = ChangeContext
-export function Edge(fromNode, toNode) {
+export function Edge(fromNode, toNode, {type} = {}) {
 	const {edge, direction} = defaultsBySource(fromNode)
 	Object.assign(this, {
 		id: toNode.id,
 		source: fromNode.id,
 		target: toNode.id,
 		data: {
-			type: edge,
+			type: type ?? edge,
 			sourceType: fromNode.data.type,
 			targetType: toNode.data.type,
 		},
