@@ -39,7 +39,7 @@ const IbisPropertyEdge = props => {
 	const [edgePath, labelX, labelY] = getBezierPath(props)
 	const {data: {properties} = {}} = useRdfTypes('ibis', '/ibis.ttl')
 	const {id, data} = props
-	const options = optionsByClass[data.fromType]?.[data.toType] ?? properties
+	const options = optionsByClass[data.sourceType]?.[data.targetType] ?? properties
 	const {setEdges} = useContext(ChangeContext)
 	const changeData = newData => {
 		setEdges(edges => edges.map(
@@ -93,8 +93,8 @@ const IbisClassNode = ({data, id, ...props}) => {
 		))
 		if (newData.type) {
 			setEdges(edges => edges.map(
-				e => e.source === id ? {...e, data: {...e.data, fromType: newData.type}}
-				:    e.target === id ? {...e, data: {...e.data, toType: newData.type}}
+				e => e.source === id ? {...e, data: {...e.data, sourceType: newData.type}}
+				:    e.target === id ? {...e, data: {...e.data, targetType: newData.type}}
 				:                    e
 			))
 		}
@@ -171,8 +171,8 @@ export function Edge(fromNode, toNode) {
 		target: toNode.id,
 		data: {
 			type: edge,
-			fromType: fromNode.data.type,
-			toType: toNode.data.type,
+			sourceType: fromNode.data.type,
+			targetType: toNode.data.type,
 		},
 		type: ibisPropertyType,
 		...direction,
