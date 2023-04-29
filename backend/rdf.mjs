@@ -1,5 +1,5 @@
 import fs from 'node:fs/promises'
-import {parseAsync, prefix} from '../lib/rdf.mjs'
+import {prefix} from '../lib/rdf.mjs'
 import {RdfaParser} from 'rdfa-streaming-parser'
 import {group} from '../lib/util.mjs'
 
@@ -9,7 +9,7 @@ myParser
 	.on('data', datum => data.push(datum))
 	.on('error', console.error)
 
-myParser.write(await fs.readFile('./owl-ibis/ibis.xml', 'utf-8'))
+myParser.write(await fs.readFile(process.argv[2], 'utf-8'))
 myParser.end()
 const dataList = ([k, v]) => (
 	`<datalist id="${prefix(k).replace(/:/g, '-')}-options">${

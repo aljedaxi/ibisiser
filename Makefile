@@ -3,9 +3,7 @@ clean:
 
 regen-ibis-spec: clean
 	git clone git@github.com:doriantaylor/owl-ibis.git
-	cd owl-ibis && make variants
-	cp owl-ibis/ibis.ttl ./public/
-	gsed -i "42i `node backend/rdf.mjs`" public/index.html
+	gsed -i "42i `node backend/rdf.mjs ./owl-ibis/ibis.xml`" public/index.html
 
 run: regen-ibis-spec
 	PORT=8011 npm run start

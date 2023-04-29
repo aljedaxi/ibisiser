@@ -8,20 +8,9 @@ import ReactFlow, {
 	useReactFlow,
 	MarkerType,
 } from 'reactflow'
-import {useRdfTypes} from './rdf'
+import {predicates, classes, optionsByClass} from './rdf'
 import ReactMarkdown from 'react-markdown'
 import {v1 as uuid} from 'uuid'
-
-const optionsByClass = 
-	[...document.querySelectorAll('datalist')].reduce((acc, e) => {
-		const xs = e.id.replace(/-options$/, '').split('-')
-		const classFrom = xs.slice(0, 2).join(':')
-		const classTo = xs.slice(2).join(':')
-		acc[classFrom] ??= {}
-		acc[classFrom][classTo] ??= []
-		acc[classFrom][classTo].push(...[...e.options].map(e => e.value))
-		return acc
-	}, {})
 
 const ChangeContext = createContext({})
 const defix = s => s.replace(/^\w+:/, '')
@@ -37,9 +26,8 @@ const IbisSelect = ({children, ...rest}) => (
 )
 const IbisPropertyEdge = props => {
 	const [edgePath, labelX, labelY] = getBezierPath(props)
-	const {data: {properties} = {}} = useRdfTypes('ibis', '/ibis.ttl')
 	const {id, data} = props
-	const options = optionsByClass[data.sourceType]?.[data.targetType] ?? properties
+	const options = optionsByClass[data.sourceType]?.[data.targetType] ?? predicates
 	const {setEdges} = useContext(ChangeContext)
 	const changeData = newData => {
 		setEdges(edges => edges.map(
@@ -82,7 +70,6 @@ const IbisPropertyEdge = props => {
 const SILVER_RATIO = 2.41421
 
 const IbisClassNode = ({data, id, ...props}) => {
-	const {data: {classes} = {}} = useRdfTypes('ibis', '/ibis.ttl')
 	const {setNodes, nodes, setEdges} = useContext(ChangeContext)
 	const changeData = newData => {
 		setNodes(nodes => nodes.map(

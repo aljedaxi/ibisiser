@@ -1,5 +1,3 @@
-import {QueryClient, QueryClientProvider} from 'react-query'
-import {useRdfQuery} from './rdf'
 import {
 	ReactFlowProvider,
 	useNodesState,
@@ -107,23 +105,10 @@ const Flow = props => {
 	)
 }
 
-const queryClient = new QueryClient()
-
-const Turtler = () => {
-	const {data = {}} = useRdfQuery('ibis', '/ibis.ttl')
-	const {classes, properties, ontologies} = data
-	return (
-		<Flow {...{classes, properties, ontologies}}>
-		</Flow>
-	)
-}
-
 function App() {
   return (
     <ReactFlowProvider>
-    	<QueryClientProvider client={queryClient}>
-				<Turtler></Turtler>
-    	</QueryClientProvider>
+			<Flow></Flow>
     </ReactFlowProvider>
   );
 }
