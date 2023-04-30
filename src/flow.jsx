@@ -106,6 +106,11 @@ const IbisClassNode = ({data, id, ...props}) => {
 	const mySource = nodes.find(n => n.id === myEdge?.source)
 	const permissableClasses = Object.keys(optionsByClass[mySource?.data.type] ?? {})
 	const handleDelete = () => setNodes(nodes => nodes.filter(n => n.id !== id))
+	const handleSubmit = e => {
+		e.preventDefault()
+		const newData = Object.fromEntries(new FormData(e.target).entries())
+		changeNodeData(id, newData)
+	}
 	return (
 		<>
 			<Handle type='target' position='left'></Handle>
@@ -116,23 +121,15 @@ const IbisClassNode = ({data, id, ...props}) => {
 				</ReactMarkdown>
 			</div>
 			<NodeToolbar>
-				<div style={{display: 'grid', gridTemplateColumns: `1fr ${SILVER_RATIO}fr`}}>
-					<label htmlFor={`label-${id}`}>
-						Label
-					</label>
-					<input id={`label-${id}`} value={data.label} name='label' onChange={e => {
-						const {value} = e.target
-						changeNodeData(id, {label: value})
-					}}/>
-					<label htmlFor={`type-${id}`}>
-						Type
-					</label>
-					<IbisSelect id={`type-${id}`} value={data.type} name='type' onChange={e => {
-						const {value} = e.target
-						changeNodeData(id, {type: value})
-					}}>
+				<form onSubmit={handleSubmit} style={{display: 'grid', gridTemplateColumns: `1fr ${SILVER_RATIO}fr`}}>
+					<label htmlFor={`label-${id}`}>Label</label>
+					<input id={`label-${id}`} defaultValue={data.label} name='label'/>
+					<label htmlFor={`type-${id}`}>Type</label>
+					<IbisSelect id={`type-${id}`} defaultValue={data.type} name='type'>
 						{permissableClasses.length ? permissableClasses : classes}
 					</IbisSelect>
+					<div></div>
+					<button type='submit'>save</button>
 					<div></div>
 					<div style={{display: 'grid', gridTemplateColumns: `1fr ${SILVER_RATIO}fr`}}>
 						<button
@@ -146,7 +143,7 @@ const IbisClassNode = ({data, id, ...props}) => {
 							open editor dialog
 						</button>
 					</div>
-				</div>
+				</form>
 			</NodeToolbar>
 		</>
 	)
