@@ -83,7 +83,7 @@ const EditorDialog = props => {
 			<label htmlFor={`label-${id}`}>
 				Label
 			</label>
-			<input id={`label-${id}`} defaultValue={data.label} name='label'/>
+			<textarea id={`label-${id}`} defaultValue={data.label} name='label'/>
 			<label htmlFor={`type-${id}`}>
 				Type
 			</label>
