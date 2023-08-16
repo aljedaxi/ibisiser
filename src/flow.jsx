@@ -79,7 +79,7 @@ const EditorDialog = props => {
 	const mySource = nodes.find(n => n.id === myEdge?.source)
 	const permissableClasses = Object.keys(optionsByClass[mySource?.data.type] ?? {})
 	return (
-		<form style={{display: 'grid', gridTemplateColumns: `1fr ${SILVER_RATIO}fr`}} onSubmit={e => onChange(new FormData(e.target))} method='dialog'>
+		<form style={{display: 'grid', gridTemplateColumns: `1fr ${SILVER_RATIO}fr`}} method='dialog'>
 			<label htmlFor={`label-${id}`}>
 				Label
 			</label>
@@ -90,11 +90,8 @@ const EditorDialog = props => {
 			<IbisSelect id={`type-${id}`} defaultValue={data.type} name="type" >
 				{permissableClasses.length ? permissableClasses : classes}
 			</IbisSelect>
-			<button onClick={e => {
-				e.preventDefault()
-				onChange(undefined)
-			}}>cancel</button>
-			<button type='submit'>submit</button>
+			<button name="cancel" value="cancel" formNoValidate>cancel</button>
+			<button type='submit' value='submit'>submit</button>
 		</form>
 	)
 }
@@ -202,15 +199,18 @@ const DialogProvider = props => {
 	const [id, setId] = useState()
 	const activeNode = nodes.find(n => n.id === id)
 	const {Provider} = DialogContext
-	const handleChange = newData => {
-		if (newData) changeNodeData(id, Object.fromEntries(newData.entries()))
+	const handleClose = e => {
+		const {target: modal} = e
+		if (modal.returnValue === 'submit') {
+			const newData = new FormData(e.target.querySelector('form'))
+			if (newData) changeNodeData(id, Object.fromEntries(newData.entries()))
+		}
 		setId(undefined)
-		dialog.current.close()
 	}
 	return (
 		<Fragment>
-			<dialog ref={dialog}>
-				<EditorDialog onChange={handleChange} node={activeNode}></EditorDialog>
+			<dialog ref={dialog} onClose={handleClose}>
+				<EditorDialog node={activeNode}></EditorDialog>
 			</dialog>
 			<Provider value={{
 				handleOpenDialog: newId => {
