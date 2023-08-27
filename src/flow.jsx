@@ -1,4 +1,4 @@
-import {useCallback, useState, createContext, useContext, useRef, Fragment} from 'react'
+import {useCallback, useState, createContext, useContext, useRef, Fragment, useEffect} from 'react'
 import ReactFlow, {
 	Controls,
 	Background,
@@ -70,31 +70,24 @@ const IbisPropertyEdge = props => {
 
 const SILVER_RATIO = 2.41421
 
-const EditorDialog = props => {
-	const {node, onChange} = props
-	const {edges, nodes} = useContext(ChangeContext)
-	if (!node) return null
-	const {id, data} = node
-	const myEdge = edges.find(e => e.target === id)
-	const mySource = nodes.find(n => n.id === myEdge?.source)
-	const permissableClasses = Object.keys(optionsByClass[mySource?.data.type] ?? {})
+const FormDialog = props => {
+	const {onClose, open, children, ...formProps} = props
+	const dialog = useRef()
+	useEffect(() => {
+		if (open) {
+			dialog.current?.showModal()
+		}
+	}, [open])
+	const {Provider} = DialogContext
 	return (
-		<form style={{display: 'grid', gridTemplateColumns: `1fr ${SILVER_RATIO}fr`}} method='dialog'>
-			<label htmlFor={`label-${id}`}>
-				Label
-			</label>
-			<textarea id={`label-${id}`} defaultValue={data.label} name='label'/>
-			<label htmlFor={`type-${id}`}>
-				Type
-			</label>
-			<IbisSelect id={`type-${id}`} defaultValue={data.type} name="type" >
-				{permissableClasses.length ? permissableClasses : classes}
-			</IbisSelect>
-			<button name="cancel" value="cancel" formNoValidate>cancel</button>
-			<button type='submit' value='submit'>submit</button>
-		</form>
+		<dialog ref={dialog} onClose={onClose}>
+			<form {...formProps} method='dialog'>
+				{children}
+			</form>
+		</dialog>
 	)
 }
+
 
 const IbisClassNode = ({data, id, ...props}) => {
 	const {setNodes, nodes, edges, changeNodeData} = useContext(ChangeContext)
@@ -193,9 +186,35 @@ export function Node(fromNode, {position}) {
 	if (!fromNode) return this
 	this.edge = new Edge(fromNode, this.node);
 }
+
+const EditorDialog = props => {
+	const {node} = props
+	const {edges, nodes} = useContext(ChangeContext)
+	if (!node) return null
+	const {id, data} = node
+	const myEdge = edges.find(e => e.target === id)
+	const mySource = nodes.find(n => n.id === myEdge?.source)
+	const permissableClasses = Object.keys(optionsByClass[mySource?.data.type] ?? {})
+	return (
+		<>
+			<label htmlFor={`label-${id}`}>
+				Label
+			</label>
+			<textarea required id={`label-${id}`} defaultValue={data.label} name='label'/>
+			<label htmlFor={`type-${id}`}>
+				Type
+			</label>
+			<IbisSelect id={`type-${id}`} defaultValue={data.type} name="type" >
+				{permissableClasses.length ? permissableClasses : classes}
+			</IbisSelect>
+			<button name="cancel" value="cancel" formNoValidate>cancel</button>
+			<button type='submit' value='submit'>submit</button>
+		</>
+	)
+}
+
 const DialogProvider = props => {
 	const {children, nodes, changeNodeData} = props
-	const dialog = useRef()
 	const [id, setId] = useState()
 	const activeNode = nodes.find(n => n.id === id)
 	const {Provider} = DialogContext
@@ -209,15 +228,10 @@ const DialogProvider = props => {
 	}
 	return (
 		<Fragment>
-			<dialog ref={dialog} onClose={handleClose}>
+			<FormDialog open={id} style={{display: 'grid', gridTemplateColumns: `1fr ${SILVER_RATIO}fr`}} onClose={handleClose}>
 				<EditorDialog node={activeNode}></EditorDialog>
-			</dialog>
-			<Provider value={{
-				handleOpenDialog: newId => {
-					setId(newId)
-					dialog.current.showModal()
-				},
-			}}>
+			</FormDialog>
+			<Provider value={{handleOpenDialog: setId}}>
 				{children}
 			</Provider>
 		</Fragment>
