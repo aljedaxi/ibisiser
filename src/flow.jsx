@@ -88,13 +88,60 @@ const FormDialog = props => {
 	)
 }
 
-
-const IbisClassNode = ({data, id, ...props}) => {
-	const {setNodes, nodes, edges, changeNodeData} = useContext(ChangeContext)
-	const {handleOpenDialog} = useContext(DialogContext)
+const usePermissableClasses = ({data: {type}, id} = {data: {}}) => {
+	const {edges, nodes} = useContext(ChangeContext)
+	if (!type || !id) return []
 	const myEdge = edges.find(e => e.target === id)
 	const mySource = nodes.find(n => n.id === myEdge?.source)
 	const permissableClasses = Object.keys(optionsByClass[mySource?.data.type] ?? {})
+	return permissableClasses?.length > 0 ? permissableClasses : classes
+}
+
+const EditorDialog = props => {
+	const {node} = props
+	const permissableClasses = usePermissableClasses(node)
+	if (!node) return null
+	const {id, data} = node
+	return (
+		<>
+			<label htmlFor={`label-${id}`}>
+				Label
+			</label>
+			<textarea required id={`label-${id}`} defaultValue={data.label} name='label'/>
+			<label htmlFor={`type-${id}`}>
+				Type
+			</label>
+			<IbisSelect id={`type-${id}`} defaultValue={data.type} name="type" >
+				{permissableClasses.length ? permissableClasses : classes}
+			</IbisSelect>
+			<button name="cancel" value="cancel" formNoValidate>cancel</button>
+			<button type='submit' value='submit'>submit</button>
+		</>
+	)
+}
+const ToolbarDialog = props => {
+	const {node, children, onSubmit} = props
+	const {id, data} = node
+	const permissableClasses = usePermissableClasses(node)
+	return (
+		<form onSubmit={onSubmit} style={{display: 'grid', gridTemplateColumns: `1fr ${SILVER_RATIO}fr`}}>
+			<label htmlFor={`label-${id}`}>Label</label>
+			<input id={`label-${id}`} defaultValue={data.label} name='label'/>
+			<label htmlFor={`type-${id}`}>Type</label>
+			<IbisSelect id={`type-${id}`} defaultValue={data.type} name='type'>
+				{permissableClasses.length ? permissableClasses : classes}
+			</IbisSelect>
+			<div></div>
+			<button type='submit'>save</button>
+			{children}
+		</form>
+	)
+}
+
+const IbisClassNode = node => {
+	const {data, id, ...props} = node
+	const {setNodes, nodes, edges, changeNodeData} = useContext(ChangeContext)
+	const {handleOpenDialog} = useContext(DialogContext)
 	const handleDelete = () => setNodes(nodes => nodes.filter(n => n.id !== id))
 	const handleSubmit = e => {
 		e.preventDefault()
@@ -111,15 +158,7 @@ const IbisClassNode = ({data, id, ...props}) => {
 				</ReactMarkdown>
 			</div>
 			<NodeToolbar>
-				<form onSubmit={handleSubmit} style={{display: 'grid', gridTemplateColumns: `1fr ${SILVER_RATIO}fr`}}>
-					<label htmlFor={`label-${id}`}>Label</label>
-					<input id={`label-${id}`} defaultValue={data.label} name='label'/>
-					<label htmlFor={`type-${id}`}>Type</label>
-					<IbisSelect id={`type-${id}`} defaultValue={data.type} name='type'>
-						{permissableClasses.length ? permissableClasses : classes}
-					</IbisSelect>
-					<div></div>
-					<button type='submit'>save</button>
+				<ToolbarDialog onSubmit={handleSubmit} node={node} key={`${data.label}${data.type}`}>
 					<div></div>
 					<div style={{display: 'grid', gridTemplateColumns: `1fr ${SILVER_RATIO}fr`}}>
 						<button
@@ -133,7 +172,7 @@ const IbisClassNode = ({data, id, ...props}) => {
 							open editor dialog
 						</button>
 					</div>
-				</form>
+				</ToolbarDialog>
 			</NodeToolbar>
 		</>
 	)
@@ -185,32 +224,6 @@ export function Node(fromNode, {position}) {
 	};
 	if (!fromNode) return this
 	this.edge = new Edge(fromNode, this.node);
-}
-
-const EditorDialog = props => {
-	const {node} = props
-	const {edges, nodes} = useContext(ChangeContext)
-	if (!node) return null
-	const {id, data} = node
-	const myEdge = edges.find(e => e.target === id)
-	const mySource = nodes.find(n => n.id === myEdge?.source)
-	const permissableClasses = Object.keys(optionsByClass[mySource?.data.type] ?? {})
-	return (
-		<>
-			<label htmlFor={`label-${id}`}>
-				Label
-			</label>
-			<textarea required id={`label-${id}`} defaultValue={data.label} name='label'/>
-			<label htmlFor={`type-${id}`}>
-				Type
-			</label>
-			<IbisSelect id={`type-${id}`} defaultValue={data.type} name="type" >
-				{permissableClasses.length ? permissableClasses : classes}
-			</IbisSelect>
-			<button name="cancel" value="cancel" formNoValidate>cancel</button>
-			<button type='submit' value='submit'>submit</button>
-		</>
-	)
 }
 
 const DialogProvider = props => {
